@@ -16,58 +16,22 @@ import java.util.concurrent.Executors;
 
 
 
-public class    WebServer {
-    private ServerSocket serverSocket;
-    private ExecutorService service;
+public class WebServer implements HttpHandler{
 
-    public static void main(String[] args) throws IOException {
-        int port = 8081;
-        if (System.getenv("PORT") != null) {
-            port = Integer.parseInt(System.getenv("PORT"));
-        }
-        try {
-            new WebServer().start(port);
-        } catch (IOException e) {
-            System.err.println(Messages.NO_SUCH_COMMAND);
-        }
-    }
-
-    private void start(int port) throws IOException {
-
-        // Initialize server socket and thread pool
-        // serverSocket = new ServerSocket(port);
-        HttpServer server = HttpServer.create(new InetSocketAddress("localhost", port), 0);
-        service = Executors.newCachedThreadPool();
-        server.setExecutor(service);
-        server.createContext("/www", new RequestHandler());
-        server.start();
-
-
-        System.out.println("HELLO");
-
-        //Socket clientSocket = serverSocket.accept();
-
-       // BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+    @Override
+    public void handle(HttpExchange exchange) throws IOException {
+        System.out.println("TESTE do handle");
+        //String response = "Hello, world!";
+        String response = new String(Files.readAllBytes(Paths.get("www/index.html")), StandardCharsets.UTF_8);
+        exchange.sendResponseHeaders(200, response.getBytes().length);
+        OutputStream os = exchange.getResponseBody();
+        os.write(response.getBytes());
+        os.close();
 
     }
 
-    private void serverRequests(ServerSocket serverSocket, ExecutorService service) {
-    }
+    /*private static class RequestHandler{
 
-    private static class RequestHandler implements HttpHandler{
-
-        HttpExchange exchange;
-
-        @Override
-        public void handle(HttpExchange exchange) throws IOException {
-            String request = null;
-            if ("GET".equals(exchange.getRequestMethod())) {
-                request = handleGetRequest(exchange);
-                System.out.println(request);
-            }
-            System.out.println("TESTE do handle");
-            handleResponse(exchange);
-        }
 
         private String handleGetRequest(HttpExchange httpExchange) {
             return httpExchange.
@@ -78,26 +42,41 @@ public class    WebServer {
         }
 
         private void handleResponse(HttpExchange httpExchange) throws IOException {
-
-            OutputStream outputStream = httpExchange.getResponseBody();
-            //Path htmlResponsePath = Paths.get("www/index.html");
-            /*StringBuilder stringBuilder = new StringBuilder();
-            BufferedReader br = new BufferedReader(new FileReader(htmlResponsePath.toFile()));
-            String line = br.readLine();
-
-            while (line != null){
-                stringBuilder.append(line);
-                br.readLine();
-            }
-
-             */
             String html = new String(Files.readAllBytes(Paths.get("www/index.html")), StandardCharsets.UTF_8);
 
             httpExchange.sendResponseHeaders(200, html.getBytes().length);
 
+            OutputStream outputStream = httpExchange.getResponseBody();
             outputStream.write(html.getBytes());
-            outputStream.flush();
+            //outputStream.flush();
             outputStream.close();
         }
+    }*/
+    public static void main(String[] args) throws IOException {
+        int port = 8081;
+        if (System.getenv("PORT") != null) {
+            port = Integer.parseInt(System.getenv("PORT"));
+        }
+        try {
+            new WebServer().start();
+        } catch (IOException e) {
+            System.err.println(Messages.NO_SUCH_COMMAND);
+        }
+
+        /*HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
+        server.createContext("/", new WebServer());
+        server.start();
+        System.out.println("Server started on port 8000");*/
+
+    }
+
+    private void start() throws IOException {
+
+        HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
+        server.createContext("/", new WebServer());
+        server.start();
+
+        System.out.println("Server started");
+
     }
 }
