@@ -61,7 +61,6 @@ public class WebServer {
             }
 
         }
-
         private String handleGetRequest(HttpExchange httpExchange) {
             return httpExchange.
             getRequestURI()
