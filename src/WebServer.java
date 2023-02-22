@@ -45,9 +45,6 @@ public class WebServer {
     }
 
     private void serverRequests (ServerSocket serverSocket, ExecutorService service){
-
-
-
     }
 
     private static class RequestHandler implements HttpHandler {
@@ -68,5 +65,7 @@ public class WebServer {
                     .split("\\?")[1]
                     .split("=")[1];
         }
+
+
     }
 }
