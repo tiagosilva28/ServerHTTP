@@ -3,13 +3,12 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import util.Messages;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.ExecutorService;
@@ -17,12 +16,12 @@ import java.util.concurrent.Executors;
 
 
 
-public class WebServer {
+public class    WebServer {
     private ServerSocket serverSocket;
     private ExecutorService service;
 
     public static void main(String[] args) throws IOException {
-        int port = 8080;
+        int port = 8081;
         if (System.getenv("PORT") != null) {
             port = Integer.parseInt(System.getenv("PORT"));
         }
@@ -38,10 +37,13 @@ public class WebServer {
         // Initialize server socket and thread pool
         // serverSocket = new ServerSocket(port);
         HttpServer server = HttpServer.create(new InetSocketAddress("localhost", port), 0);
-        server.createContext("/www", new RequestHandler());
         service = Executors.newCachedThreadPool();
         server.setExecutor(service);
+        server.createContext("/www", new RequestHandler());
         server.start();
+
+
+        System.out.println("HELLO");
 
         //Socket clientSocket = serverSocket.accept();
 
@@ -52,7 +54,9 @@ public class WebServer {
     private void serverRequests(ServerSocket serverSocket, ExecutorService service) {
     }
 
-    private static class RequestHandler implements HttpHandler {
+    private static class RequestHandler implements HttpHandler{
+
+        HttpExchange exchange;
 
         @Override
         public void handle(HttpExchange exchange) throws IOException {
@@ -61,6 +65,7 @@ public class WebServer {
                 request = handleGetRequest(exchange);
                 System.out.println(request);
             }
+            System.out.println("TESTE do handle");
             handleResponse(exchange);
         }
 
@@ -75,14 +80,24 @@ public class WebServer {
         private void handleResponse(HttpExchange httpExchange) throws IOException {
 
             OutputStream outputStream = httpExchange.getResponseBody();
-            String htmlResponse = String.valueOf(Paths.get("www/index.html"));
+            //Path htmlResponsePath = Paths.get("www/index.html");
+            /*StringBuilder stringBuilder = new StringBuilder();
+            BufferedReader br = new BufferedReader(new FileReader(htmlResponsePath.toFile()));
+            String line = br.readLine();
 
-            httpExchange.sendResponseHeaders(200, htmlResponse.length());
+            while (line != null){
+                stringBuilder.append(line);
+                br.readLine();
+            }
 
-            outputStream.write(htmlResponse.getBytes());
+             */
+            String html = new String(Files.readAllBytes(Paths.get("www/index.html")), StandardCharsets.UTF_8);
+
+            httpExchange.sendResponseHeaders(200, html.getBytes().length);
+
+            outputStream.write(html.getBytes());
             outputStream.flush();
             outputStream.close();
-
         }
     }
 }
